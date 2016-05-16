@@ -11,13 +11,19 @@ package com.bupt.pm25;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.Fragment;
+import android.content.ContentResolver;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.ImageFormat;
+import android.graphics.PixelFormat;
 import android.hardware.Camera;
 import android.hardware.Camera.Size;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Surface;
@@ -26,45 +32,43 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
-
 
 import com.bupt.pm25.util.BitmapUtils;
 import com.bupt.pm25.util.FileUtils;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
-@TargetApi(Build.VERSION_CODES.HONEYCOMB)
-public class CameraFragment extends Fragment implements View.OnClickListener {
-    private static final String TAG = "CameraFragment";
-    public static final int RESULT_OK = -1;
-    public static final String EXTRA_OK_PHOTOFILENAME_STRING = "extra_ok_photoFileName_string";
+public class MyCameraFragment extends Fragment implements View.OnClickListener,SurfaceHolder.Callback{
+    private static final String TAG = "MyCameraFragment";
     public static final String SD_IMAGES_PATH = Environment.getExternalStorageDirectory().getPath() + "/cn.edu.bupt/";
     public static final String DATA_IMAGES_PATH = "/data/data/cn.edu.bupt/images/";
 
     private SurfaceView mSurfaceView;
+    private SurfaceHolder holder;
     private View mBgFrame;
     //    private ImageView mCountImageView;
     private TextView mCountText;
     private Button mPhotoButton;//拍照按鈕
-    private Button mAlbumButton;//相册
     private Button mCancleButton;//退出按鈕
     private Button mOKButton;//上傳圖片按鈕
     private TextView mChongpaiButton;//重拍按鈕
     private boolean mPhotoTaked;//是否拍照
     private String mPhotoFilePath = new String();
     private Camera mCamera;
-    private Camera.PictureCallback mJpegCallBack = new Camera.PictureCallback() {
+    @SuppressWarnings("deprecation")
+    private Camera.PictureCallback mPictureCallback = new Camera.PictureCallback() {
         public void onPictureTaken(byte[] data, Camera camera) {
             Date photoDate = new Date();
-            String shortName = new SimpleDateFormat("yyyyMMddHHmmss").format(photoDate) + "_" + AppConfig.NOW_LONGITUDE + "_" + AppConfig.NOW_LATITUDE + "_" + android.os.Build.MODEL + ".jpeg";
+            String shortName = new SimpleDateFormat("yyyyMMddHHmmss").format(photoDate) +"_"+AppConfig.NOW_LONGITUDE +"_"+AppConfig.NOW_LATITUDE + "_" + Build.MODEL + ".jpeg";
             mPhotoFilePath = AppConfig.APP_FOLDER + shortName;
-            String photoTime = new SimpleDateFormat("HH:mm:ss").format(photoDate);
             FileOutputStream fos = null;
             File pictureFile = FileUtils.createFileSuccessful(getActivity(), mPhotoFilePath);
 
@@ -94,17 +98,16 @@ public class CameraFragment extends Fragment implements View.OnClickListener {
         }
 
     };
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
         mPhotoTaked = false;
     }
-
-    private void initView(View v) {
+    private void initView(View v){
         mBgFrame = v.findViewById(R.id.bg_frame);
         mSurfaceView = (SurfaceView) v.findViewById(R.id.surfaceview_camera);
+        holder = mSurfaceView.getHolder();
         mPhotoButton = (Button) v.findViewById(R.id.button_takephoto);
         mChongpaiButton = (TextView) v.findViewById(R.id.button_chongpai);
         mOKButton = (Button) v.findViewById(R.id.button_ok);
@@ -115,94 +118,28 @@ public class CameraFragment extends Fragment implements View.OnClickListener {
         mOKButton.setVisibility(View.INVISIBLE);
         mChongpaiButton.setVisibility(View.INVISIBLE);
     }
-
-    private void initEvent() {
-        SurfaceHolder holder = mSurfaceView.getHolder();
+    @SuppressWarnings("deprecation")
+    private void initEvent(){
         holder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
-        holder.addCallback(new SurfaceHolder.Callback() {
-            @Override
-            public void surfaceCreated(SurfaceHolder holder) {
-                try {
-                    if (mCamera != null) {
-                        mCamera.setPreviewDisplay(holder);
-                    }
-                } catch (IOException exception) {
-                    Log.e(TAG, "设置预览失败", exception);
-                }
-            }
-
-            @Override
-            @SuppressWarnings("deprecation")
-            public void surfaceChanged(SurfaceHolder holder, int format, int w, int h) {
-                if (mCamera == null) {
-                    return;
-                }
-                Camera.CameraInfo info = new Camera.CameraInfo();
-                Camera.getCameraInfo(0, info);//0是默认的第一个相机
-                int rotation = getActivity().getWindowManager().getDefaultDisplay().getRotation();
-                int degrees = 0;
-                switch (rotation) {
-                    case Surface.ROTATION_0:
-                        degrees = 0;
-                        break;
-                    case Surface.ROTATION_90:
-                        degrees = 90;
-                        break;
-                    case Surface.ROTATION_180:
-                        degrees = 180;
-                        break;
-                    case Surface.ROTATION_270:
-                        degrees = 270;
-                        break;
-                }
-                int result;
-                if (info.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
-                    result = (info.orientation + degrees) % 360;
-                    result = (360 - result) % 360; // compensate the mirror
-                } else { // back-facing
-                    result = (info.orientation - degrees + 360) % 360;
-                }
-
-                Camera.Parameters parameters = mCamera.getParameters();
-                Size previewSize = getBestSupportedSize(parameters.getSupportedPreviewSizes(), w, h);
-                parameters.setPreviewSize(previewSize.width, previewSize.height);
-                parameters.setRotation(result);
-                Log.d("预览尺寸", previewSize.width + "*" + previewSize.height);
-
-                String previewSizesString = parameters.get("preview-size-values");
-                Log.d("预览全尺寸", previewSizesString);
-
-                Size pictureSize = getMatchedSupportedSize(parameters.getSupportedPictureSizes(), previewSize);
-                Log.d("拍照尺寸", pictureSize.width + "*" + pictureSize.height);
-                parameters.setPictureSize(pictureSize.width, pictureSize.height);
-                String pictureSizesString = parameters.get("picture-size-values");
-                Log.d("拍照全尺寸", pictureSizesString);
-                parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);//1连续对焦
-                mCamera.setParameters(parameters);
-                mCamera.setDisplayOrientation(result);
-                try {
-                    mCamera.startPreview();
-                    mCamera.cancelAutoFocus();// 2如果要实现连续的自动对焦，这一句必须加上
-                } catch (Exception e) {
-                    Log.e(TAG, "启动预览失败", e);
-                    mCamera.release();
-                    mCamera = null;
-                }
-            }
-
-            @Override
-            public void surfaceDestroyed(SurfaceHolder holder) {
-                if (mCamera != null) {
-                    mCamera.stopPreview();
-                }
-            }
-        });
-
+        holder.addCallback(this);
         mPhotoButton.setEnabled(true);
         mPhotoButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
+                /*Camera.Parameters parameters = mCamera.getParameters();
+                parameters.setPictureFormat(ImageFormat.JPEG);
+                parameters.setPreviewSize(400, 240);
+                parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_AUTO);
+                mCamera.autoFocus(new Camera.AutoFocusCallback() {
+                    @Override
+                    public void onAutoFocus(boolean success, Camera camera) {
+                        //success代表对焦是否准确
+                        if (success) {
+                            mCamera.takePicture(null, null, mPictureCallback);
+                        }
+                    }
+                });*/
                 if (mCamera != null) {
-                    mCamera.takePicture(null, null, mJpegCallBack);
+                    mCamera.takePicture(null, null, mPictureCallback);
                 }
             }
         });
@@ -224,17 +161,91 @@ public class CameraFragment extends Fragment implements View.OnClickListener {
         });
         mOKButton.setEnabled(false);
         mOKButton.setOnClickListener(new View.OnClickListener() {
-            @TargetApi(Build.VERSION_CODES.HONEYCOMB)
             @Override
             public void onClick(View v) {
                 uploadPicture.uploadPicture(mPhotoFilePath);
             }
         });
     }
+    /**
+     * 开始预览相机内容
+     */
+    @SuppressWarnings("deprecation")
+    private void setStartPreview(Camera camera, SurfaceHolder holder) {
+        try {
+            //将holder对象传递到Camera对象中,完成绑定操作
+            camera.setPreviewDisplay(holder);
+            //获取相机参数
+            Camera.Parameters parameters = mCamera.getParameters();
+            Size previewSize = getBestSupportedSize(parameters.getSupportedPreviewSizes(), 1, 1);
+            parameters.setPreviewSize(previewSize.width, previewSize.height);
+            Size pictureSize = getMatchedSupportedSize(parameters.getSupportedPictureSizes(), previewSize);
+            parameters.setPictureSize(pictureSize.width, pictureSize.height);
+            parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);//1连续对焦
+            mCamera.setParameters(parameters);
+            //将Camera预览角度进行调整90°
+            //开始在surface预览操作,但是是横屏的，在预览之前增加一个setDisplayOrientation方法
+            camera.setDisplayOrientation(90);
+            camera.startPreview();
+            camera.cancelAutoFocus();// 2如果要实现连续的自动对焦，这一句必须加上
+        } catch (IOException e) {
+            Log.e(TAG, e.getMessage());
+        }
+    }
+    /**
+     * 获取Camerad对象
+     *
+     * @return
+     */
+    @SuppressWarnings("deprecation")
+    private Camera getCamera() {
+        Camera camera;
+        try {
+            int n =Camera.getNumberOfCameras();
+            Log.i(TAG,n+"");
+            camera = Camera.open(0);
+        } catch (Exception e) {
+            camera = null;
+            e.printStackTrace();
+        }
+        return camera;
+    }
+    /**
+     * 释放相机占用的资源，请求了Camera但是没有释放会出现错误，所以建议跟系统生命周期绑定
+     */
+    private void releaseCamera() {
+        if (mCamera != null) {
+            //将相机的回调置空,取消mCamera跟surfaceView的关联操作
+            mCamera.setPreviewCallback(null);
+            //取消掉相机取景功能
+            mCamera.stopPreview();
+            mCamera.release();
+            mCamera = null;
+        }
+    }
+
+
+    @Override
+    public void surfaceCreated(SurfaceHolder holder) {
+        //开始camera与surfaceview的绑定
+        setStartPreview(mCamera, holder);
+    }
+    @Override
+    public void surfaceChanged(SurfaceHolder holder, int format, int w, int h) {
+        //重启整个功能，首先stopCamera,将相机进行关闭
+        mCamera.stopPreview();
+        setStartPreview(mCamera, holder);
+    }
+    @Override
+    public void surfaceDestroyed(SurfaceHolder holder) {
+        //释放相机
+        releaseCamera();
+    }
+
 
     @Override
     public void onClick(View v) {
-        switch (v.getId()) {
+        switch (v.getId()){
             case R.id.bg_frame:
                 mCamera.autoFocus(new Camera.AutoFocusCallback() {
                     @Override
@@ -245,6 +256,7 @@ public class CameraFragment extends Fragment implements View.OnClickListener {
                 break;
         }
     }
+
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -264,51 +276,26 @@ public class CameraFragment extends Fragment implements View.OnClickListener {
         }
     }
 
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        if (mCamera != null) {
-            mCamera.release();
-            mCamera = null;
-        }
-    }
 
     @Override
     public void onResume() {
         super.onResume();
-        mCamera = getCamera();
-    }
-
-    /**
-     * 获取Camerad对象
-     *
-     * @return
-     */
-    private Camera getCamera() {
-        Camera camera;
-        try {
-            //相机初始化
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD) {//为什么要在这里增加打开指定相机。相当于初始化。
-                camera = Camera.open(0);
-            } else {
-                camera = Camera.open();
+        mPhotoTaked=false;
+        resetView();
+        //camera初始化
+        if (mCamera == null) {
+            mCamera = getCamera();
+            if (holder != null) {
+                setStartPreview(mCamera, holder);
             }
-        } catch (Exception e) {
-            camera = null;
-            e.printStackTrace();
         }
-        return camera;
-
     }
 
     @Override
     public void onPause() {
         super.onPause();
-
-        if (mCamera != null) {
-            mCamera.release();
-            mCamera = null;
-        }
+        //释放camera
+        releaseCamera();
     }
 
 
@@ -324,11 +311,10 @@ public class CameraFragment extends Fragment implements View.OnClickListener {
         }
         return bestSize;
     }
-
+    @SuppressWarnings("deprecation")
     private Size getMatchedSupportedSize(List<Size> sizes, Size previewSize) {
         Size bestSize = sizes.get(0);
         boolean has1080 = false;
-
         double bili = (double) previewSize.width / previewSize.height;
         for (Size s : sizes) {
 //            Log.d("尺寸组合：","width"+s.width+"height"+s.height);
@@ -369,7 +355,9 @@ public class CameraFragment extends Fragment implements View.OnClickListener {
             mChongpaiButton.setEnabled(false);
             mChongpaiButton.setVisibility(View.INVISIBLE);//重拍按鈕不可見
             try {
-                mCamera.startPreview();
+                if(mCamera != null) {
+                    mCamera.startPreview();
+                }
             } catch (Exception e) {
                 Log.e(TAG, "启动预览失败", e);
                 mCamera.release();

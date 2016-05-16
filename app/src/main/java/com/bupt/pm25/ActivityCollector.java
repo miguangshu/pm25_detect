@@ -12,8 +12,8 @@ import java.util.List;
  * Created by hougr on 15-6-11.
  */
 public class ActivityCollector {
-    public static List<Activity> sActivityList=new ArrayList<Activity>();
-    public static ArrayList<Activity> sSignUpActivityList=new ArrayList<Activity>();
+    public static List<Activity> sActivityList = new ArrayList<Activity>();
+    public static ArrayList<Activity> sSignUpActivityList = new ArrayList<Activity>();
 
 
 

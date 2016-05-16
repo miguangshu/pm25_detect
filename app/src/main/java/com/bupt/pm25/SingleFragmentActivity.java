@@ -17,15 +17,6 @@ public abstract class SingleFragmentActivity extends BaseActivity {
         return R.layout.activity_fragment;
     }
 
-    @Override
-    protected void initViews() {
-
-    }
-
-    @Override
-    protected void initEvents() {
-
-    }
 
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     @Override

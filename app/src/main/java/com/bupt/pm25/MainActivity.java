@@ -28,7 +28,7 @@ public class MainActivity extends BaseActivity implements OnClickListener
 	private LocationClient mLocationClient;
 	private double mLatitude;
 	private double mLongitude;
-//	private ImageView bulbButton;
+	private ImageView bulbButton;
 	Handler tHandler = new Handler();
 	Runnable HandlerThread = new Runnable() {
 
@@ -50,7 +50,7 @@ public class MainActivity extends BaseActivity implements OnClickListener
 	@Override
 	public void initViews()
 	{
-//		bulbButton = (ImageView)findViewById(R.id.bulb);
+		bulbButton = (ImageView)findViewById(R.id.bulb);
 		photoButton = (Button)findViewById(R.id.btn_photo);
 		mLocationClient = new LocationClient(this);
 
@@ -66,7 +66,7 @@ public class MainActivity extends BaseActivity implements OnClickListener
 	protected void initEvents()
 	{
 		photoButton.setOnClickListener(this);
-//		bulbButton.setOnClickListener(this);
+		bulbButton.setOnClickListener(this);
 		tHandler.post(HandlerThread);
 
 		mLocationClient.registerLocationListener(new BDLocationListener() {
@@ -84,8 +84,6 @@ public class MainActivity extends BaseActivity implements OnClickListener
 		});
 		LocationClientOption option = new LocationClientOption();
 		option.setLocationMode(LocationClientOption.LocationMode.Hight_Accuracy);//混合模式
-//        option.setLocationMode(LocationClientOption.LocationMode.Device_Sensors);//仅GPS
-//        option.setLocationMode(LocationClientOption.LocationMode.Battery_Saving);//仅基站
 		option.setOpenGps(true);// 打开gps
 		option.setCoorType("bd09ll"); // 设置坐标类型
 		option.setScanSpan(1200);
@@ -105,10 +103,10 @@ public class MainActivity extends BaseActivity implements OnClickListener
 				intent = new Intent(MainActivity.this,CameraActivity.class);
 				startActivity(intent);
 				break;
-//			case R.id.bulb:
-//				intent = new Intent(MainActivity.this,BulbActivity.class);
-//				startActivity(intent);
-//				break;
+			case R.id.bulb:
+				intent = new Intent(MainActivity.this,BulbActivity.class);
+				startActivity(intent);
+				break;
 			default:
 				break;
 		}
@@ -152,10 +150,8 @@ public class MainActivity extends BaseActivity implements OnClickListener
 				ScaleAnimation.RELATIVE_TO_SELF, 0.5f,
 				ScaleAnimation.RELATIVE_TO_SELF, 0.5f);
 		sa.setDuration(OFFSET * 3);
-//		sa.setRepeatCount(Animation.INFINITE);// 设置循环
 		AlphaAnimation aa = new AlphaAnimation(0.5f, 0.1f);
 		aa.setDuration(OFFSET * 3);
-//		aa.setRepeatCount(Animation.INFINITE);//设置循环
 		as.addAnimation(sa);
 		as.addAnimation(aa);
 		return as;

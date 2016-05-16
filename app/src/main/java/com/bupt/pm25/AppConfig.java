@@ -10,7 +10,7 @@ import java.io.File;
 public class AppConfig {
     public static String sSDRootPath = Environment.getExternalStorageDirectory().getPath()+ File.separator;
 
-    public static final String APP_FOLDER = sSDRootPath + "LaoHanSocket"+ File.separator;
+    public static final String APP_FOLDER = sSDRootPath + "PM25"+ File.separator;
 
     //配置，不变
     public static String NEW_FILE_PATH = "";
