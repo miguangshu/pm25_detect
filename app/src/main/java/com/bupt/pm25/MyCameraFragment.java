@@ -373,6 +373,15 @@ public class MyCameraFragment extends Fragment implements View.OnClickListener,S
             mPhotoButton.setVisibility(View.INVISIBLE);//拍照不按鈕可見
             mCancleButton.setEnabled(false);
             mCancleButton.setVisibility(View.INVISIBLE);//退出不按鈕可見
+            try {
+                if(mCamera != null) {
+                    mCamera.stopPreview();
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "启动预览失败", e);
+                mCamera.release();
+                mCamera = null;
+            }
         }
     }
 

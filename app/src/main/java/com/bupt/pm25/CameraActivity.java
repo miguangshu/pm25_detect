@@ -3,6 +3,7 @@ package com.bupt.pm25;
 import android.annotation.TargetApi;
 import android.app.Dialog;
 import android.app.Fragment;
+import android.app.ProgressDialog;
 import android.content.ContentResolver;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -38,6 +39,7 @@ import java.util.List;
 
 public class CameraActivity extends SingleFragmentActivity implements MyCameraFragment.UploadPictureInterface{
     private static String TAG = "CameraActivity";
+    private ProgressDialog mDialog;
 
     private FdfTransfer transfer = FdfTransfer.getInstance();
     private Socket socket;
@@ -54,7 +56,8 @@ public class CameraActivity extends SingleFragmentActivity implements MyCameraFr
     }
 
     @Override
-    protected void initViews() { }
+    protected void initViews() {
+    }
 
     @Override
     protected void initEvents() {}
@@ -106,7 +109,7 @@ public class CameraActivity extends SingleFragmentActivity implements MyCameraFr
     private class UploadImageTask extends AsyncTask<Void, Void, Object> {
         @Override
         protected void onPreExecute() {
-            showLoadingDialog("正在上传图片");
+            mDialog = ProgressDialog.show(CameraActivity.this, null, "正在上传图片，请稍后...", true, false);
         }
 
         @Override
@@ -149,7 +152,9 @@ public class CameraActivity extends SingleFragmentActivity implements MyCameraFr
 
         @Override
         protected void onPostExecute(Object o) {
-            dismissLoadingDialog();
+            if(mDialog.isShowing()) {
+                mDialog.dismiss();
+            }
             Dialog dialog = new Dialog(CameraActivity.this);
             dialog.setTitle("当前pm2.5值为:"+o);
             dialog.show();
