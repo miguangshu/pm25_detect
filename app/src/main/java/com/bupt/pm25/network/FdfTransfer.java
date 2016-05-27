@@ -51,8 +51,6 @@ public class FdfTransfer {
 		long totalLen = 8 + array.length;//报文总长度
 		array = au.concat(bdtt.longToByteArray(totalLen), array);
 		Log.d("sockettest", "total_size" + totalLen);
-
-
 		return array;
 	}
 

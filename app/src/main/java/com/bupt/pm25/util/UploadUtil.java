@@ -150,16 +150,16 @@ public class UploadUtil {
             conn.setRequestProperty("Content-Type", CONTENT_TYPE + ";boundary=" + BOUNDARY);
 // conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
 
-/**
- * 当文件不为空，把文件包装并且上传
- */
+            /**
+             * 当文件不为空，把文件包装并且上传
+             */
             DataOutputStream dos = new DataOutputStream(conn.getOutputStream());
             StringBuffer sb = null;
             String params = "";
 
-/***
- * 以下是用于上传参数
- */
+            /***
+             * 以下是用于上传参数
+             */
             if (param != null && param.size() > 0) {
                 Iterator<String> it = param.keySet().iterator();
                 while (it.hasNext()) {
@@ -211,11 +211,11 @@ public class UploadUtil {
             byte[] end_data = (PREFIX + BOUNDARY + PREFIX + LINE_END).getBytes();
             dos.write(end_data);
             dos.flush();
-//
-// dos.write(tempOutputStream.toByteArray());
-/**
- * 获取响应码 200=成功 当响应成功，获取响应的流
- */
+            //
+            // dos.write(tempOutputStream.toByteArray());
+            /**
+             * 获取响应码 200=成功 当响应成功，获取响应的流
+             */
             int res = conn.getResponseCode();
             responseTime = System.currentTimeMillis();
             this.requestTime = (int) ((responseTime-requestTime)/1000);
@@ -230,8 +230,7 @@ public class UploadUtil {
                 }
                 result = sb1.toString();
                 Log.e(TAG, "result : " + result);
-                sendMessage(UPLOAD_SUCCESS_CODE, "上传结果："
-                        + result);
+                sendMessage(UPLOAD_SUCCESS_CODE, "上传结果：" + result);
                 return;
             } else {
                 Log.e(TAG, "request error");

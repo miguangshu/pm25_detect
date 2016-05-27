@@ -55,7 +55,7 @@ public class CameraFragment extends Fragment implements View.OnClickListener {
     private Button mAlbumButton;//相册
     private Button mCancleButton;//退出按鈕
     private Button mOKButton;//上傳圖片按鈕
-    private TextView mChongpaiButton;//重拍按鈕
+    private Button mChongpaiButton;//重拍按鈕
     private boolean mPhotoTaked;//是否拍照
     private String mPhotoFilePath = new String();
     private Camera mCamera;
@@ -106,7 +106,7 @@ public class CameraFragment extends Fragment implements View.OnClickListener {
         mBgFrame = v.findViewById(R.id.bg_frame);
         mSurfaceView = (SurfaceView) v.findViewById(R.id.surfaceview_camera);
         mPhotoButton = (Button) v.findViewById(R.id.button_takephoto);
-        mChongpaiButton = (TextView) v.findViewById(R.id.button_chongpai);
+        mChongpaiButton = (Button) v.findViewById(R.id.button_chongpai);
         mOKButton = (Button) v.findViewById(R.id.button_ok);
         mCancleButton = (Button) v.findViewById(R.id.button_cancle);
         mCountText = (TextView) v.findViewById(R.id.count_textView);

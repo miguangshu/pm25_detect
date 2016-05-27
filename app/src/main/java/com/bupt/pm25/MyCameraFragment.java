@@ -33,6 +33,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.bupt.pm25.util.BitmapUtils;
@@ -59,10 +60,11 @@ public class MyCameraFragment extends Fragment implements View.OnClickListener,S
     private Button mPhotoButton;//拍照按鈕
     private Button mCancleButton;//退出按鈕
     private Button mOKButton;//上傳圖片按鈕
-    private TextView mChongpaiButton;//重拍按鈕
+    private Button mChongpaiButton;//重拍按鈕
     private boolean mPhotoTaked;//是否拍照
     private String mPhotoFilePath = new String();
     private Camera mCamera;
+    private ProgressBar mProgressBar;//进度条
     @SuppressWarnings("deprecation")
     private Camera.PictureCallback mPictureCallback = new Camera.PictureCallback() {
         public void onPictureTaken(byte[] data, Camera camera) {
@@ -109,10 +111,13 @@ public class MyCameraFragment extends Fragment implements View.OnClickListener,S
         mSurfaceView = (SurfaceView) v.findViewById(R.id.surfaceview_camera);
         holder = mSurfaceView.getHolder();
         mPhotoButton = (Button) v.findViewById(R.id.button_takephoto);
-        mChongpaiButton = (TextView) v.findViewById(R.id.button_chongpai);
+        mChongpaiButton = (Button) v.findViewById(R.id.button_chongpai);
         mOKButton = (Button) v.findViewById(R.id.button_ok);
         mCancleButton = (Button) v.findViewById(R.id.button_cancle);
         mCountText = (TextView) v.findViewById(R.id.count_textView);
+/*
+        mProgressBar = (ProgressBar) v.findViewById(R.id.id_upload_progress_bar);
+*/
         mPhotoButton.setVisibility(View.VISIBLE);
         mCancleButton.setVisibility(View.VISIBLE);
         mOKButton.setVisibility(View.INVISIBLE);
@@ -167,6 +172,7 @@ public class MyCameraFragment extends Fragment implements View.OnClickListener,S
             }
         });
     }
+
     /**
      * 开始预览相机内容
      */
@@ -177,6 +183,8 @@ public class MyCameraFragment extends Fragment implements View.OnClickListener,S
             camera.setPreviewDisplay(holder);
             //获取相机参数
             Camera.Parameters parameters = mCamera.getParameters();
+            //保存照片旋转角度
+            parameters.setRotation(90);
             Size previewSize = getBestSupportedSize(parameters.getSupportedPreviewSizes(), 1, 1);
             parameters.setPreviewSize(previewSize.width, previewSize.height);
             Size pictureSize = getMatchedSupportedSize(parameters.getSupportedPictureSizes(), previewSize);
@@ -341,7 +349,10 @@ public class MyCameraFragment extends Fragment implements View.OnClickListener,S
 
         return bestSize;
     }
-
+    public void reTakenPic(boolean isTaken){
+        mPhotoTaked = isTaken;
+        resetView();
+    }
     private void resetView() {
         //如果沒有拍照
         if (!mPhotoTaked) {
